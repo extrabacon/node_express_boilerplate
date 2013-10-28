@@ -1,0 +1,6 @@
+{
+  "predef": ["exports"],
+  "browser": true,
+  "devel": true,
+  "expr": true
+}

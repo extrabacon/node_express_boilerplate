@@ -1,0 +1,48 @@
+!!! 5
+html(lang='en')
+  head
+    block title
+      title My Express App
+    block meta
+      meta(charset='utf8')
+      meta(name='viewport', content='width=device-width, initial-scale=1.0')
+    block styles
+      link(href='/stylesheets/styles.css', rel='stylesheet')
+      link(href='/stylesheets/font-awesome.css', rel='stylesheet')
+    //if lt IE 9
+      script(src='/scripts/html5shiv.js')
+      script(src='/scripts/respond.min.js')
+    link(rel='apple-touch-icon-precomposed', sizes='144x144', href='/images/icons/logo-2l-touch-144.png')
+    link(rel='apple-touch-icon-precomposed', sizes='114x114', href='/images/icons/logo-2l-touch-114.png')
+    link(rel='apple-touch-icon-precomposed', sizes='72x72', href='/images/icons/logo-2l-touch-72.png')
+    link(rel='apple-touch-icon-precomposed', href='/images/icons/logo-2l-touch-57.png')
+    link(rel='shortcut icon', href='/favicon.ico')
+  body
+    #wrap
+      block nav
+        .navbar.navbar-default(role='navigation')
+          .container
+            .navbar-header.menu-underline-effect
+              button.navbar-toggle(type='button', data-toggle='collapse', data-target='.navbar-ex1-collapse')
+                span.sr-only Toggle navigation
+                span.icon-bar
+                span.icon-bar
+                span.icon-bar
+              a.navbar-brand(href='/')
+                i.icon-file
+                | MyExpressApp.com
+            .collapse.navbar-collapse.navbar-ex1-collapse
+              ul.nav.navbar-nav.menu-underline-effect
+                li.navbar-item-features: a(href='/menu1') Menu 1
+                li.navbar-item-demos: a(href='/menu2') Menu 2
+              ul.nav.navbar-right
+                li: button.btn.btn-default.navbar-btn(type='button') Sign In
+      #main
+        block body
+    block footer
+      footer
+    block scripts
+      script(src='/scripts/jquery.min.js')
+      script(src='/scripts/bootstrap.min.js')
+      if process.env.NODE_ENV == 'development'
+        script(src='http://localhost:35729/livereload.js')
