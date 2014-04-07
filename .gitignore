@@ -1,4 +1,12 @@
+lib-cov
+*.seed
+*.log
+*.csv
+*.dat
+*.out
+*.pid
+*.gz
+
 bower_components
 node_modules
-temp
-*.sublime-workspace
+npm-debug.log

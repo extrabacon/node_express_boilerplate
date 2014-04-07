@@ -1,77 +1,102 @@
 module.exports = function (grunt) {
-
-    var shellWithOutput = { stdout: true, stderr: true, failOnError: true };
+    var env;
 
     // Project configuration
     grunt.initConfig({
         pkg: grunt.file.readJSON('package.json'),
-        env_name: 'local',
         shell: {
-            npm_install: { command: 'npm install', options: shellWithOutput },
-            npm_update: { command: 'npm update', options: shellWithOutput },
-            bower_install: { command: 'bower install', options: shellWithOutput },
-            bower_update: { command: 'bower update', options: shellWithOutput },
-            start: {
-                command: 'nodemon app.js',
-                options: shellWithOutput
+            npm_install: { command: 'npm install' },
+            bower_install: { command: 'bower install' },
+            start_inspector: { command: 'node-inspector &' },
+            start_debugger: { command: 'open http://127.0.0.1:8080/debug?port=5858' },
+            options: { stdout: true, stderr: true, failOnError: true }
+        },
+        nodemon: {
+            dev: {
+                script: 'app.js',
+                options: {
+                    args: [],
+                    env: env,
+                    ignore: ['test/**', 'public/**', 'node_modules/**']
+                }
             },
-            start_debug: {
-                command: 'node --debug app.js',
-                options: shellWithOutput
-            },
-            start_inspector: { command: 'node-inspector &', options: shellWithOutput },
-            start_debugger: { command: 'open http://127.0.0.1:8080/debug?port=5858' }
+            debug: {
+                script: 'app.js',
+                options: {
+                    args: [],
+                    env: env,
+                    nodeArgs: ['--debug'],
+                    ignore: ['test/**', 'public/**', 'node_modules/**']
+                }
+            }
+        },
+        'node-inspector': {
+            dev: {}
         },
         concurrent: {
-            development: {
-                tasks: ['shell:start', 'watch'],
+            dev: {
+                tasks: ['nodemon:dev', 'watch'],
                 options: {
                     logConcurrentOutput: true
                 }
             },
-            debugging: {
-                tasks: ['shell:start_debug', 'shell:start_inspector', 'shell:start_debugger'],
+            debug: {
+                tasks: ['nodemon:debug', 'node-inspector', 'shell:start_debugger', 'watch'],
                 options: {
                     logConcurrentOutput: true
                 }
             }
         },
-        copy: {
-            bower_components: {
-                files: [
-                    // jQuery
-                    {
-                        src: 'bower_components/jquery/jquery.min.js',
-                        dest: 'public/js/jquery.min.js'
-                    },
-                    {
-                        src: 'bower_components/jquery/jquery.min.map',
-                        dest: 'public/js/jquery.min.map'
-                    },
-                    // Twitter Bootstrap
-                    {
-                        expand: true,
-                        cwd: 'bower_components/bootstrap/less/',
-                        src: '*.less',
-                        dest: 'stylesheets/bootstrap/'
-                    },
-                    {
-                        src: 'bower_components/bootstrap/dist/js/bootstrap.min.js',
-                        dest: 'public/js/bootstrap.min.js'
-                    },
-                    {
-                        src: 'bower_components/bootstrap/assets/js/html5shiv.js',
-                        dest: 'public/js/html5shiv.js'
-                    },
-                    {
-                        src: 'bower_components/bootstrap/assets/js/respond.min.js',
-                        dest: 'public/js/respond.min.js'
-                    }
-                ]
+        bowercopy: {
+            jquery: {
+                files: {
+                    'scripts/jquery.min.js': 'jquery/dist/jquery.min.js',
+                    'scripts/jquery.min.map': 'jquery/dist/jquery.min.map',
+                }
+            },
+            bootstrap: {
+                files: {
+                    'stylesheets/less/bootstrap': 'bootstrap/less',
+                    'scripts/source/bootstrap': 'bootstrap/js',
+                    'scripts/bootstrap.min.js': 'bootstrap/dist/js/bootstrap.min.js',
+                    'fonts': 'bootstrap/fonts'
+                }
+            },
+            font_awesome: {
+                files: {
+                    'stylesheets/less/font-awesome': 'font-awesome/less',
+                    'fonts': 'font-awesome/fonts'
+                }
+            },
+            options: {
+                destPrefix: 'public'
             }
         },
-        uglify: {},
-        less: {},
+        /*browserify: {
+
+        },
+        uglify: {
+
+        },
+        less: {
+
+        },
+        cssmin: {
+
+        },*/
+        imagemin: {
+            dist: {
+                files: [{
+                    expand: true,
+                    cwd: 'public/images',
+                    src: '{,*/}*.{png,jpg,jpeg}',
+                    dest: 'public/images'
+                }],
+                options: {
+                    optimizationLevel: 7
+                }
+            }
+        },
         watch: {
             scripts: {
                 files: ['public/scripts/source/**/*.js'],
@@ -82,42 +107,89 @@ module.exports = function (grunt) {
                 tasks: ['less']
             },
             views: {
-                files: ['views/*.jade'],
+                files: ['views/**/*.jade'],
                 tasks: []
             },
             options: {
                 livereload: true
             }
         },
-        bumpup: 'package.json',
-        tagrelease: 'package.json'
+        release: {
+            options: {
+                npm: false,
+                commitMessage: 'Release <%= version %>'
+            }
+        }
     });
 
-    grunt.loadNpmTasks('grunt-contrib');
-    grunt.loadNpmTasks('grunt-shell');
-    grunt.loadNpmTasks('grunt-concurrent');
-    grunt.loadNpmTasks('grunt-bumpup');
-    grunt.loadNpmTasks('grunt-tagrelease');
+    require('load-grunt-tasks')(grunt);
 
-    grunt.registerTask('default', 'Runs the default build', [
-        'shell:npm_install',
-        'uglify',
-        'less'
+    grunt.registerTask('default', 'Run the default build', [
+        //'browserify',
+        //'uglify',
+        //'less',
+        //'cssmin'
     ]);
 
-    grunt.registerTask('install', 'Install package dependencies (npm and bower)', [
+    grunt.registerTask('install', 'Install dependencies (npm and bower)', [
         'shell:npm_install',
         'shell:bower_install',
-        'copy:bower_components'
+        'bowercopy'
     ]);
 
-    grunt.registerTask('update', 'Update package dependencies (npm and bower)', [
-        'shell:npm_update',
-        'shell:bower_update',
-        'copy:bower_components'
-    ]);
+    grunt.registerTask('dev', 'Start the application in development mode', ['default', 'concurrent:dev']);
+    grunt.registerTask('debug', 'Run the application in debugging mode', ['default', 'concurrent:debug']);
 
-    grunt.registerTask('start', 'Start the application in development mode', ['default', 'concurrent:development']);
-    grunt.registerTask('debug', 'Run the application in debugging mode', ['default', 'concurrent:debugging']);
+    function loadEnv(path) {
+        path = path || 'local';
+        if (!/json$/.test(path)) path = './env.' + path + '.json';
+        var env = require(path);
+        for (var key in env) {
+            process.env[key] = env[key];
+        }
+        return env;
+    }
+    grunt.registerTask('env', 'Load environment variables', loadEnv);
+    env = loadEnv();
 
+    grunt.registerTask('test', 'Run tests with Mocha', function (reporter) {
+        reporter = reporter || 'spec';
+        var args = ['-R', reporter];
+        grunt.util.toArray(arguments).slice(1).forEach(function (arg) {
+            args.push(arg);
+        });
+        grunt.util.spawn({
+            cmd: 'mocha',
+            args: args,
+            opts: { env: env, stdio: 'inherit' }
+        }, this.async());
+    });
+
+    grunt.registerTask('heroku_config', 'Apply configuration settings for an Heroku application', function () {
+        var args = Object.keys(env).map(function (key) {
+            return key + '=' + env[key];
+        });
+        args.unshift('config:set');
+        grunt.util.spawn({
+            cmd: 'heroku',
+            args: args,
+            opts: { stdio: 'inherit' }
+        }, this.async());
+    });
+
+    grunt.registerTask('heroku_push', 'Deploy the application to the Heroku remote', function () {
+        grunt.util.spawn({
+            cmd: 'git',
+            args: ['push', 'heroku', 'master'],
+            opts: { stdio: 'inherit' }
+        }, this.async());
+    });
+
+    grunt.registerTask('heroku_open', 'Open the Heroku application in the browser', function () {
+        grunt.util.spawn({
+            cmd: 'heroku',
+            args: ['open'],
+            opts: { stdio: 'inherit' }
+        }, this.async());
+    });
 };

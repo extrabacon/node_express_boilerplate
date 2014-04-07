@@ -1,9 +1,0 @@
-/.git
-/temp
-/test
-/web/public
-/web/font-awesome
-*.css
-*.less
-*.jade
-*.html
